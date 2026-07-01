@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register - TechStore</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = { theme: { extend: { fontFamily: { sans: ['Inter', 'sans-serif'] }, colors: { primary: '#4f46e5' } } } }
+    </script>
+</head>
+<body class="bg-gray-50 flex items-center justify-center h-screen">
+
+    <div class="bg-white p-8 rounded-xl shadow-lg max-w-md w-full">
+        <div class="text-center mb-8">
+            <h1 class="text-3xl font-bold text-gray-900">Create Account</h1>
+            <p class="text-gray-500 mt-2">Join us to start shopping</p>
+        </div>
+        
+        <div id="msg-box" class="hidden p-3 rounded-lg mb-4 text-sm text-center"></div>
+
+        <form id="register-form" class="space-y-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Username</label>
+                <input type="text" id="username" required class="mt-1 w-full border border-gray-300 rounded-lg p-2.5 focus:ring-primary focus:border-primary">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Email Address</label>
+                <input type="email" id="email" required class="mt-1 w-full border border-gray-300 rounded-lg p-2.5 focus:ring-primary focus:border-primary">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Password</label>
+                <input type="password" id="password" required class="mt-1 w-full border border-gray-300 rounded-lg p-2.5 focus:ring-primary focus:border-primary">
+            </div>
+            <button type="submit" class="w-full bg-primary text-white font-semibold py-3 rounded-lg hover:bg-indigo-700 transition mt-2">
+                Sign Up
+            </button>
+        </form>
+
+        <p class="mt-6 text-center text-sm text-gray-600">
+            Already have an account? <a href="login.html" class="text-primary hover:underline font-medium">Log in</a>
+        </p>
+    </div>
+
+    <script>
+        const API_URL = 'https://backenduas-production-9579.up.railway.app/api';
+
+        document.getElementById('register-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const username = document.getElementById('username').value;
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const msgBox = document.getElementById('msg-box');
+
+            try {
+                const res = await fetch(`${API_URL}/auth/register`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, email, password })
+                });
+                
+                const data = await res.json();
+                
+                msgBox.classList.remove('hidden', 'bg-red-100', 'text-red-700', 'bg-green-100', 'text-green-700');
+                if (data.success) {
+                    msgBox.classList.add('bg-green-100', 'text-green-700');
+                    msgBox.innerText = 'Registration successful! Redirecting to login...';
+                    setTimeout(() => window.location.href = 'login.html', 1500);
+                } else {
+                    msgBox.classList.add('bg-red-100', 'text-red-700');
+                    msgBox.innerText = data.message;
+                }
+            } catch (err) {
+                msgBox.classList.remove('hidden', 'bg-green-100', 'text-green-700');
+                msgBox.classList.add('bg-red-100', 'text-red-700');
+                msgBox.innerText = 'Connection error. Please try again.';
+            }
+        });
+    </script>
+</body>
+</html>
