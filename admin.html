@@ -82,8 +82,9 @@
                             <input type="number" id="pStock" class="w-full border-gray-300 rounded-md shadow-sm border p-2 focus:ring-primary focus:border-primary">
                         </div>
                         <div class="md:col-span-2">
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Image URL</label>
-                            <input type="text" id="pImg" class="w-full border-gray-300 rounded-md shadow-sm border p-2 focus:ring-primary focus:border-primary" placeholder="https://...">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Product Image</label>
+                            <input type="file" id="pImgFile" accept="image/*" class="w-full border-gray-300 rounded-md shadow-sm border p-2 focus:ring-primary focus:border-primary">
+                            <p class="text-xs text-gray-500 mt-1">Select an image to upload (will be stored securely).</p>
                         </div>
                     </div>
                     <div class="mt-4 flex justify-end">
@@ -285,25 +286,50 @@
             }
         }
 
+        // Helper to convert file to base64
+        const fileToBase64 = (file) => new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = () => resolve(reader.result);
+            reader.onerror = error => reject(error);
+        });
+
         async function createProduct() {
+            const fileInput = document.getElementById('pImgFile');
+            let imageUrl = '';
+            
+            if (fileInput.files.length > 0) {
+                try {
+                    imageUrl = await fileToBase64(fileInput.files[0]);
+                } catch (e) {
+                    return alert('Failed to process image');
+                }
+            }
+
             const product = {
                 name: document.getElementById('pName').value,
                 description: document.getElementById('pDesc').value,
                 price: document.getElementById('pPrice').value,
                 stock: document.getElementById('pStock').value,
-                image_url: document.getElementById('pImg').value,
+                image_url: imageUrl,
                 category_id: 1
             };
+            
             try {
-                await fetch(`${API_URL}/products`, {
+                const response = await fetch(`${API_URL}/products`, {
                     method: 'POST',
                     headers: getAuthHeaders(),
                     body: JSON.stringify(product)
                 });
-                alert('Product created');
-                fetchProducts();
-                document.querySelectorAll('#products-section input').forEach(input => input.value = '');
-            } catch(e) { alert('Failed to create product'); }
+                const result = await response.json();
+                if(result.success) {
+                    alert('Product created');
+                    fetchProducts();
+                    document.querySelectorAll('#products-section input').forEach(input => input.value = '');
+                } else {
+                    alert('Failed: ' + result.message);
+                }
+            } catch(e) { alert('Failed to connect to API'); }
         }
 
         async function deleteProduct(id) {
