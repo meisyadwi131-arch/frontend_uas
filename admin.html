@@ -25,6 +25,7 @@
         <h2>Admin Panel</h2>
         <a href="#" onclick="showSection('products')">Products CRUD</a>
         <a href="#" onclick="showSection('orders')">Orders (Pesanan)</a>
+        <a href="#" onclick="showSection('users')">Users (Pengguna)</a>
         <a href="index.html">Back to Store</a>
     </div>
 
@@ -69,6 +70,35 @@
                 <tbody id="order-table-body"></tbody>
             </table>
         </div>
+
+        <div id="users-section" style="display: none;">
+            <h2>Manage Users</h2>
+            <div style="background: #fff; padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
+                <h3>Add New User</h3>
+                <div class="form-group"><input type="text" id="uName" placeholder="Username"></div>
+                <div class="form-group"><input type="email" id="uEmail" placeholder="Email"></div>
+                <div class="form-group"><input type="password" id="uPass" placeholder="Password"></div>
+                <div class="form-group">
+                    <select id="uRole" style="width: 100%; padding: 0.5rem; box-sizing: border-box;">
+                        <option value="customer">Customer</option>
+                        <option value="admin">Admin</option>
+                    </select>
+                </div>
+                <button class="btn" onclick="createUser()">Save User</button>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Username</th>
+                        <th>Email</th>
+                        <th>Role</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="user-table-body"></tbody>
+            </table>
+        </div>
     </div>
 
     <script>
@@ -77,8 +107,11 @@
         function showSection(section) {
             document.getElementById('products-section').style.display = section === 'products' ? 'block' : 'none';
             document.getElementById('orders-section').style.display = section === 'orders' ? 'block' : 'none';
+            document.getElementById('users-section').style.display = section === 'users' ? 'block' : 'none';
+            
             if (section === 'products') fetchProducts();
             if (section === 'orders') fetchOrders();
+            if (section === 'users') fetchUsers();
         }
 
         async function fetchProducts() {
@@ -146,6 +179,52 @@
                         </tr>
                     `;
                 });
+            }
+        }
+
+        async function fetchUsers() {
+            const res = await fetch(`${API_URL}/users`);
+            const data = await res.json();
+            const tbody = document.getElementById('user-table-body');
+            tbody.innerHTML = '';
+            if(data.success) {
+                data.data.forEach(u => {
+                    tbody.innerHTML += `
+                        <tr>
+                            <td>${u.id}</td>
+                            <td>${u.username}</td>
+                            <td>${u.email}</td>
+                            <td>${u.role}</td>
+                            <td>
+                                <button class="btn btn-danger" onclick="deleteUser(${u.id})">Delete</button>
+                            </td>
+                        </tr>
+                    `;
+                });
+            }
+        }
+
+        async function createUser() {
+            const user = {
+                username: document.getElementById('uName').value,
+                email: document.getElementById('uEmail').value,
+                password: document.getElementById('uPass').value,
+                role: document.getElementById('uRole').value
+            };
+            
+            await fetch(`${API_URL}/users`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(user)
+            });
+            alert('User created');
+            fetchUsers();
+        }
+
+        async function deleteUser(id) {
+            if(confirm('Are you sure?')) {
+                await fetch(`${API_URL}/users/${id}`, { method: 'DELETE' });
+                fetchUsers();
             }
         }
 
